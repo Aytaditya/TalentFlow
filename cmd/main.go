@@ -10,10 +10,26 @@ import (
 	"github.com/Aytaditya/slotwise/internal/storage"
 )
 
-func main() {
-	cfg := config.MustLoad() // config file loaded
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-	storage, err1 := storage.ConnectDB(cfg) // database connection
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func main() {
+	cfg := config.MustLoad()
+
+	storage, err1 := storage.ConnectDB(cfg)
 	if err1 != nil {
 		log.Fatal("Failed to connect to db")
 	}
@@ -25,9 +41,10 @@ func main() {
 	})
 
 	router.HandleFunc("POST /api/signup", auth.Signup(storage))
+	router.HandleFunc("POST /api/login", auth.Login(storage))
 
 	server := http.Server{
-		Handler: router,
+		Handler: corsMiddleware(router), // CORS enabled here
 		Addr:    cfg.Address,
 	}
 
@@ -37,5 +54,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 }

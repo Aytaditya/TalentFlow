@@ -123,3 +123,34 @@ func (sq *Sqlite) Signup(username *string, email *string, password *string) (int
 
 	return id, token, nil
 }
+
+func (sq *Sqlite) Login(email *string, password *string) (int64, string, error) {
+	if email == nil || password == nil {
+		return 0, "", fmt.Errorf("email or password cant be empty")
+	}
+
+	row := sq.DB.QueryRow("SELECT id,password FROM Admin where email=?", email)
+	var id int64
+	var dbPassword string
+
+	err := row.Scan(&id, &dbPassword)
+	if err == sql.ErrNoRows {
+		return 0, "", fmt.Errorf("no user found with the given email")
+	}
+	if err != nil {
+		return 0, "", err
+	}
+
+	// Compare the provided password with the stored hashed password
+	err = bcrypt.CompareHashAndPassword([]byte(dbPassword), []byte(*password))
+	if err != nil {
+		return 0, "", fmt.Errorf("wrong password entered")
+	}
+
+	// now we will generate token
+	token, err1 := jwt.CreateToken(id, *email)
+	if err1 != nil {
+		return 0, "", err1
+	}
+	return id, token, nil
+}
