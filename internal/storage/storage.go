@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/Aytaditya/slotwise/internal/config"
+	"github.com/Aytaditya/slotwise/internal/middleware/jwt"
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Sqlite struct {
@@ -87,4 +89,37 @@ func ConnectDB(config *config.Config) (*Sqlite, error) {
 	}
 
 	return &Sqlite{DB: db}, nil
+}
+
+func (sq *Sqlite) Signup(username *string, email *string, password *string) (int64, string, error) {
+	if username == nil || password == nil || email == nil {
+		return 0, "", fmt.Errorf("username, email and password must not be nil")
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*password), bcrypt.DefaultCost)
+	if err != nil {
+		return 0, "", fmt.Errorf("failed to hash password: %v", err)
+	}
+
+	stmt, err := sq.DB.Prepare("INSERT INTO Admin (username,email,password) VALUES (?,?,?)")
+	if err != nil {
+		return 0, "", err
+	}
+	res, err1 := stmt.Exec(username, email, string(hashedPassword))
+	if err1 != nil {
+		return 0, "", err1
+	}
+	stmt.Close()
+
+	id, err2 := res.LastInsertId()
+	if err2 != nil {
+		return 0, "", err2
+	}
+
+	// now we will generate token
+	token, err3 := jwt.CreateToken(id, *email)
+	if err3 != nil {
+		return 0, "", err3
+	}
+
+	return id, token, nil
 }
