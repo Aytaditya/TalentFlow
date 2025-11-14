@@ -251,3 +251,22 @@ func (sq *Sqlite) GetInterns() ([]types.ReturnIntern, error) {
 	}
 	return interns, nil
 }
+
+func (sq *Sqlite) UpdateIntern(id *int64, name *string, email *string, mentor_id *int64, status *string) error {
+	if id == nil {
+		return fmt.Errorf("id is required")
+	}
+
+	stmt, err := sq.DB.Prepare("UPDATE Interns SET name=?, email=?, mentor_id=?, status=? WHERE id=?")
+	if err != nil {
+		return err
+	}
+
+	_, err1 := stmt.Exec(name, email, mentor_id, status, id)
+	if err1 != nil {
+		return err1
+	}
+
+	stmt.Close()
+	return nil
+}

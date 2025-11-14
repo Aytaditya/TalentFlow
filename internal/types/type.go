@@ -46,3 +46,10 @@ type ReturnIntern struct {
 	MentorName  string `json:"mentor_name"`
 	MentorEmail string `json:"mentor_email"`
 }
+
+type UpdateIntern struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	MentorId int64  `json:"mentor_id"`
+	Status   string `json:"status"`
+}

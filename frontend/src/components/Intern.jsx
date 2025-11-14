@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import {Laptop,BriefcaseBusiness,Brain, Edit, Save, X} from 'lucide-react'
 
 const Intern = () => {
   const [formData, setFormData] = useState({
@@ -13,35 +14,39 @@ const Intern = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [activeTab, setActiveTab] = useState('add')
+  const [editingIntern, setEditingIntern] = useState(null)
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    mentor_id: '',
+    status: 'active'
+  })
 
-  // Fetch mentors from API
+  const fetchInterns = async () => {
+    try {
+      const response = await fetch("http://localhost:8082/api/all-intern")
+      if (!response.ok) throw new Error('Failed to fetch interns')
+      const data = await response.json()
+      setInterns(data)
+      console.log(data)
+    } catch (err) {
+      setError('Error fetching interns: ' + err.message)
+    }
+  }
+
+  const fetchMentors = async () => {
+    try {
+      const response = await fetch('http://localhost:8082/api/all-mentor')
+      if (!response.ok) throw new Error('Failed to fetch mentors')
+      const data = await response.json()
+      setMentors(data)
+      console.log(data)
+    } catch (err) {
+      setError('Error fetching mentors: ' + err.message)
+    }
+  }
+
   useEffect(() => {
-    const fetchMentors = async () => {
-      try {
-        const response = await fetch('http://localhost:8082/api/all-mentor')
-        if (!response.ok) throw new Error('Failed to fetch mentors')
-        const data = await response.json()
-        setMentors(data)
-        console.log(data)
-      } catch (err) {
-        setError('Error fetching mentors: ' + err.message)
-      }
-    }
-
-    // Mock interns data - replace with actual API call
-    const fetchInterns = async () => {
-
-      try {
-        const response=await fetch("http://localhost:8082/api/all-intern")
-        if (!response.ok) throw new Error('Failed to fetch mentors')
-          const data = await response.json()
-          setInterns(data)
-          console.log(data)
-      } catch (error) {
-        setError('Error fetching mentors: ' + err.message)
-      }
-    }
-
     fetchMentors()
     fetchInterns()
   }, [])
@@ -49,6 +54,11 @@ const Intern = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target
+    setEditFormData(prev => ({ ...prev, [name]: value }))
   }
 
   const addIntern = async (e) => {
@@ -69,34 +79,17 @@ const Intern = () => {
     try {
       setIsLoading(true)
       
-      
       const internData = {
         name: formData.name,
         email: formData.email,
         mentor_id: parseInt(formData.mentor_id) 
       }
 
-      console.log('Sending data to API:', internData)
-
-      // Make API call
       const response = await axios.post("http://localhost:8082/api/add-intern", internData)
       console.log('API Response:', response)
 
       if (response.data) {
-        // Find selected mentor details for display
-        const selectedMentor = mentors.find(m => m.id == formData.mentor_id)
-        
-        // Add new intern to the local state for immediate UI update
-        const newIntern = {
-          id: interns.length + 1,
-          name: formData.name,
-          email: formData.email,
-          mentor_id: selectedMentor.id,
-          mentor_name: selectedMentor.name,
-          status: 'active'
-        }
-        
-        setInterns(prev => [newIntern, ...prev])
+        fetchInterns()
         setSuccess('Intern added successfully!')
         setFormData({ name: '', email: '', mentor_id: '' })
       }
@@ -108,10 +101,81 @@ const Intern = () => {
     }
   }
 
+  const startEditing = (intern) => {
+    setEditingIntern(intern.id)
+    setEditFormData({
+      name: intern.name,
+      email: intern.email,
+      mentor_id: intern.mentor_id.toString(),
+      status: intern.status || 'active'
+    })
+  }
+
+  const cancelEditing = () => {
+    setEditingIntern(null)
+    setEditFormData({
+      name: '',
+      email: '',
+      mentor_id: '',
+      status: 'active'
+    })
+  }
+
+  const updateIntern = async (internId) => {
+    setError('')
+    setSuccess('')
+
+    if (!editFormData.name || !editFormData.email || !editFormData.mentor_id) {
+      setError('Please fill in all fields')
+      return
+    }
+
+    if (!editFormData.email.includes('@')) {
+      setError('Please enter a valid email address')
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      
+      const updateData = {
+        name: editFormData.name,
+        email: editFormData.email,
+        mentor_id: parseInt(editFormData.mentor_id),
+        status: editFormData.status
+      }
+
+      const response = await axios.put(`http://localhost:8082/api/update-intern/${internId}`, updateData)
+      console.log('Update API Response:', response)
+
+      if (response.data) {
+        fetchInterns()
+        setSuccess('Intern updated successfully!')
+        setEditingIntern(null)
+        setEditFormData({
+          name: '',
+          email: '',
+          mentor_id: '',
+          status: 'active'
+        })
+      }
+    } catch (err) {
+      console.error('Error updating intern:', err)
+      setError('Error updating intern: ' + (err.response?.data?.message || err.message))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getMentorName = (mentorId) => {
+    const mentor = mentors.find(m => m.id == mentorId)
+    return mentor ? mentor.name : 'Unknown Mentor'
+  }
+
   const stats = {
     total: interns.length,
-    active: interns.filter(i => i.status === 'Active').length,
-    inactive: interns.filter(i => i.status === 'Inactive').length,
+    active: interns.filter(i => i.status === 'active').length,
+    inactive: interns.filter(i => i.status === 'inactive').length,
     mentors: mentors.length
   }
 
@@ -121,8 +185,9 @@ const Intern = () => {
     return mentors.find(mentor => mentor.id == formData.mentor_id)
   }
 
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
+    <div className="min-h-screen bg-linear-to-br from-gray-900 via-black to-gray-900 p-6">
       <div className="flex gap-6 h-full">
         {/* Left Side - Form and Quick Stats */}
         <div className="flex-1 max-w-2xl">
@@ -180,7 +245,7 @@ const Intern = () => {
           {activeTab === 'add' && (
             <div className="bg-black/40 border border-gray-800 rounded-xl p-6">
               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <span>👨‍💻</span>
+                <span><Laptop /></span>
                 Add New Intern
               </h2>
               
@@ -269,7 +334,7 @@ const Intern = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 disabled:from-gray-900 disabled:to-gray-900 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 disabled:cursor-not-allowed border border-gray-700"
+                  className="w-full py-3 px-4 bg-linear-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 disabled:from-gray-900 disabled:to-gray-900 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 disabled:cursor-not-allowed border border-gray-700"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
@@ -288,33 +353,142 @@ const Intern = () => {
           {activeTab === 'list' && (
             <div className="bg-black/40 border border-gray-800 rounded-xl p-6">
               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <span>📋</span>
+                <span><BriefcaseBusiness /></span>
                 All Interns ({interns.length})
               </h2>
+              
+              {/* Messages */}
+              {error && (
+                <div className="p-4 bg-red-900/20 border border-red-800/50 rounded-lg mb-4">
+                  <p className="text-red-400 text-sm">{error}</p>
+                </div>
+              )}
+
+              {success && (
+                <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-lg mb-4">
+                  <p className="text-green-400 text-sm">{success}</p>
+                </div>
+              )}
+
               <div className="space-y-3">
                 {interns.map((intern) => (
-                  <div key={intern.id} className="flex items-center justify-between p-4 bg-gray-900/50 border border-gray-700 rounded-lg hover:border-gray-600 transition-all duration-200">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
-                        <span className="text-white">👤</span>
+                  <div key={intern.id} className="p-4 bg-gray-900/50 border border-gray-700 rounded-lg hover:border-gray-600 transition-all duration-200">
+                    {editingIntern === intern.id ? (
+                      // Edit Form
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-200 mb-2">
+                              Full Name *
+                            </label>
+                            <input
+                              name="name"
+                              type="text"
+                              value={editFormData.name}
+                              onChange={handleEditInputChange}
+                              className="w-full px-3 py-2 bg-gray-900/70 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-300"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-200 mb-2">
+                              Email Address *
+                            </label>
+                            <input
+                              name="email"
+                              type="email"
+                              value={editFormData.email}
+                              onChange={handleEditInputChange}
+                              className="w-full px-3 py-2 bg-gray-900/70 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-300"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-200 mb-2">
+                              Mentor *
+                            </label>
+                            <select
+                              name="mentor_id"
+                              value={editFormData.mentor_id}
+                              onChange={handleEditInputChange}
+                              className="w-full px-3 py-2 bg-gray-900/70 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-300"
+                            >
+                              <option value="">Select a mentor</option>
+                              {mentors.map((mentor) => (
+                                <option key={mentor.id} value={mentor.id}>
+                                  {mentor.name} - {mentor.department}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-200 mb-2">
+                              Status *
+                            </label>
+                            <select
+                              name="status"
+                              value={editFormData.status}
+                              onChange={handleEditInputChange}
+                              className="w-full px-3 py-2 bg-gray-900/70 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-300"
+                            >
+                              <option value="active">Active</option>
+                              <option value="inactive">Inactive</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={cancelEditing}
+                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-all duration-200 flex items-center gap-2"
+                          >
+                            <X size={16} />
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => updateIntern(intern.id)}
+                            disabled={isLoading}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all duration-200 flex items-center gap-2 disabled:opacity-50"
+                          >
+                            <Save size={16} />
+                            {isLoading ? 'Updating...' : 'Update'}
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-white font-semibold">{intern.name}</p>
-                        <p className="text-gray-400 text-sm">{intern.email}</p>
-                        <p className="text-gray-500 text-xs">ID: {intern.id}</p>
+                    ) : (
+                      // Display Mode
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
+                            <span className="text-white">👤</span>
+                          </div>
+                          <div>
+                            <p className="text-white font-semibold">{intern.name}</p>
+                            <p className="text-gray-400 text-sm">{intern.email}</p>
+                            <p className="text-gray-500 text-xs">ID: {intern.id}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-gray-400 text-sm">Mentor: {getMentorName(intern.mentor_id)}</p>
+                          <p className="text-gray-500 text-xs">Mentor ID: {intern.mentor_id}</p>
+                          <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
+                            intern.status === 'active' 
+                              ? 'bg-green-900/30 text-green-400 border border-green-800/50' 
+                              : 'bg-red-900/30 text-red-400 border border-red-800/50'
+                          }`}>
+                            {intern.status}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => startEditing(intern)}
+                          className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-all duration-200"
+                          title="Edit Intern"
+                        >
+                          <Edit size={16} className="text-gray-300" />
+                        </button>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-gray-400 text-sm">Mentor: {intern.mentor_name}</p>
-                      <p className="text-gray-500 text-xs">Mentor ID: {intern.mentor_id}</p>
-                      <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
-                        intern.status === 'Active' 
-                          ? 'bg-green-900/30 text-green-400 border border-green-800/50' 
-                          : 'bg-red-900/30 text-red-400 border border-red-800/50'
-                      }`}>
-                        {intern.status}
-                      </span>
-                    </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -322,12 +496,12 @@ const Intern = () => {
           )}
         </div>
 
-        {/* Right Side - Mentors List and Recent Activity */}
+        {/* Right Side - Mentors List */}
         <div className="flex-1 max-w-md">
           {/* Mentors List */}
           <div className="bg-black/40 border border-gray-800 rounded-xl p-6 mb-6">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <span>👨‍🏫</span>
+              <span><Brain /></span>
               Available Mentors
             </h3>
             <div className="space-y-3">
@@ -344,34 +518,8 @@ const Intern = () => {
                   </div>
                   <div className="flex gap-2 mt-2">
                     <span className="text-xs text-blue-400 bg-blue-900/30 px-2 py-1 rounded">
-                      {interns.filter(i => i.mentor_id === mentor.id).length} interns
+                      {interns.filter(i => i.mentor_id == mentor.id).length} interns
                     </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="bg-black/40 border border-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <span>📈</span>
-              Recent Activity
-            </h3>
-            <div className="space-y-3">
-              {[
-                { action: 'New intern registered', user: 'John Doe', time: '2 min ago' },
-                { action: 'Mentor assigned', user: 'aditya aryan', time: '1 hour ago' },
-                { action: 'Profile updated', user: 'Jane Smith', time: '3 hours ago' },
-                { action: 'Status changed', user: 'Mike Johnson', time: '1 day ago' },
-              ].map((activity, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 hover:bg-gray-900/30 rounded-lg transition-all duration-200">
-                  <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
-                    <span className="text-sm">🔔</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-white text-sm">{activity.action}</p>
-                    <p className="text-gray-400 text-xs">{activity.user} • {activity.time}</p>
                   </div>
                 </div>
               ))}
