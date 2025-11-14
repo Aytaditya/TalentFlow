@@ -208,7 +208,7 @@ func (sq *Sqlite) AddMentor(name *string, email *string, department *string) (in
 }
 
 func (sq *Sqlite) GetMentors() ([]types.ReturnMentor, error) {
-	rows, err := sq.DB.Query("SELECT id, name,department FROM Mentors")
+	rows, err := sq.DB.Query("SELECT id, name,email,department FROM Mentors")
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +217,7 @@ func (sq *Sqlite) GetMentors() ([]types.ReturnMentor, error) {
 	var mentors []types.ReturnMentor
 	for rows.Next() {
 		var mentor types.ReturnMentor // a single mentor will be appended into mentors
-		err1 := rows.Scan(&mentor.Id, &mentor.Name, &mentor.Department)
+		err1 := rows.Scan(&mentor.Id, &mentor.Name, &mentor.Email, &mentor.Department)
 		if err1 != nil {
 			return nil, err1
 		}
@@ -267,6 +267,57 @@ func (sq *Sqlite) UpdateIntern(id *int64, name *string, email *string, mentor_id
 		return err1
 	}
 
+	stmt.Close()
+	return nil
+}
+
+func (sq *Sqlite) DeleteIntern(id *int64) error {
+	if id == nil {
+		return fmt.Errorf("id is required")
+	}
+	stmt, err := sq.DB.Prepare("DELETE FROM Interns WHERE id=?")
+	if err != nil {
+		return err
+	}
+	_, err1 := stmt.Exec(id)
+	if err1 != nil {
+		return err1
+	}
+	stmt.Close()
+	return nil
+}
+
+func (sq *Sqlite) UpdateMentor(id *int64, name *string, email *string, department *string) error {
+	if id == nil {
+		return fmt.Errorf("id is required")
+	}
+
+	stmt, err := sq.DB.Prepare("UPDATE Mentors SET name=?, email=?, department=? WHERE id=?")
+	if err != nil {
+		return err
+	}
+
+	_, err1 := stmt.Exec(name, email, department, id)
+	if err1 != nil {
+		return err1
+	}
+
+	stmt.Close()
+	return nil
+}
+
+func (sq *Sqlite) DeleteMentor(id *int64) error {
+	if id == nil {
+		return fmt.Errorf("id is required")
+	}
+	stmt, err := sq.DB.Prepare("DELETE FROM Mentors WHERE id=?")
+	if err != nil {
+		return err
+	}
+	_, err1 := stmt.Exec(id)
+	if err1 != nil {
+		return err1
+	}
 	stmt.Close()
 	return nil
 }

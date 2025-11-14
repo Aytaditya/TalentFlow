@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { Activity, ChartBar, Baby, Users, FolderClosed, LogOut,User } from "lucide-react"
 import Data from "../components/Data";
 import Intern from "../components/Intern";
+import Mentor from "../components/Mentor";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -163,7 +164,12 @@ export default function Dashboard() {
           <div className="">
             <Intern/>
           </div>
-        
+        )}
+
+        {activeTab==="addMentor" &&(
+          <div>
+            <Mentor/>
+          </div>
         )}
       </div>
 

@@ -77,3 +77,20 @@ func UpdateIntern(storage *storage.Sqlite) http.HandlerFunc {
 		response.WriteResponse(w, http.StatusOK, map[string]string{"message": "Intern updated successfully"})
 	}
 }
+
+func DeleteIntern(storage *storage.Sqlite) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("internId")
+		InternId, convErr := strconv.ParseInt(id, 10, 64)
+		if convErr != nil {
+			response.WriteResponse(w, http.StatusBadRequest, map[string]string{"error": "Invalid note ID"})
+			return
+		}
+		err := storage.DeleteIntern(&InternId)
+		if err != nil {
+			response.WriteResponse(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		response.WriteResponse(w, http.StatusOK, map[string]string{"message": "Intern deleted successfully"})
+	}
+}

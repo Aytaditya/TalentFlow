@@ -46,8 +46,11 @@ func main() {
 	router.HandleFunc("POST /api/login", auth.Login(storage))
 	router.HandleFunc("POST /api/add-mentor", mentor.AddMentor(storage))
 	router.HandleFunc("GET /api/all-intern", Interns.FetchInterns(storage))
-	router.HandleFunc("PUT /api/update-intern/{internId}", Interns.UpdateIntern(storage))
 	router.HandleFunc("GET /api/all-mentor", mentor.FetchMentors(storage))
+	router.HandleFunc("PUT /api/update-intern/{internId}", Interns.UpdateIntern(storage))
+	router.HandleFunc("PUT /api/update-mentor/{mentorId}", mentor.UpdateMentor(storage))
+	router.HandleFunc("DELETE /api/delete-mentor/{mentorId}", mentor.DeleteMentor(storage))
+	router.HandleFunc("DELETE /api/delete-intern/{internId}", Interns.DeleteIntern(storage))
 	router.HandleFunc("POST /api/add-intern", Interns.AddIntern(storage))
 
 	server := http.Server{

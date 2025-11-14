@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import {Laptop,BriefcaseBusiness,Brain, Edit, Save, X} from 'lucide-react'
+import {Laptop,BriefcaseBusiness,Brain, Edit, Save, X, Trash2, Mail, Building} from 'lucide-react'
 
 const Intern = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +15,7 @@ const Intern = () => {
   const [success, setSuccess] = useState('')
   const [activeTab, setActiveTab] = useState('add')
   const [editingIntern, setEditingIntern] = useState(null)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [editFormData, setEditFormData] = useState({
     name: '',
     email: '',
@@ -167,6 +168,35 @@ const Intern = () => {
     }
   }
 
+  const confirmDelete = (internId, internName) => {
+    setDeleteConfirm({ id: internId, name: internName })
+  }
+
+  const cancelDelete = () => {
+    setDeleteConfirm(null)
+  }
+
+  const deleteIntern = async (internId) => {
+    try {
+      setIsLoading(true)
+      setError('')
+      
+      const response = await axios.delete(`http://localhost:8082/api/delete-intern/${internId}`)
+      console.log('Delete API Response:', response)
+
+      if (response.data) {
+        fetchInterns()
+        setSuccess('Intern deleted successfully!')
+        setDeleteConfirm(null)
+      }
+    } catch (err) {
+      console.error('Error deleting intern:', err)
+      setError('Error deleting intern: ' + (err.response?.data?.message || err.message))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const getMentorName = (mentorId) => {
     const mentor = mentors.find(m => m.id == mentorId)
     return mentor ? mentor.name : 'Unknown Mentor'
@@ -185,9 +215,50 @@ const Intern = () => {
     return mentors.find(mentor => mentor.id == formData.mentor_id)
   }
 
+  const getEditSelectedMentor = () => {
+    if (!editFormData.mentor_id) return null
+    return mentors.find(mentor => mentor.id == editFormData.mentor_id)
+  }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-900 via-black to-gray-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-black/90 border border-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 animate-scale-in">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-900/20 border border-red-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="text-red-400" size={24} />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Delete Intern</h3>
+              <p className="text-gray-400 mb-4">
+                Are you sure you want to delete <span className="text-white font-semibold">{deleteConfirm.name}</span>? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={cancelDelete}
+                  className="flex-1 py-3 px-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition-all duration-200 border border-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteIntern(deleteConfirm.id)}
+                  disabled={isLoading}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  ) : (
+                    <Trash2 size={16} />
+                  )}
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-6 h-full">
         {/* Left Side - Form and Quick Stats */}
         <div className="flex-1 max-w-2xl">
@@ -245,7 +316,7 @@ const Intern = () => {
           {activeTab === 'add' && (
             <div className="bg-black/40 border border-gray-800 rounded-xl p-6">
               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <span><Laptop /></span>
+                <span className='text-blue-400'><Laptop /></span>
                 Add New Intern
               </h2>
               
@@ -334,10 +405,10 @@ const Intern = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 px-4 bg-linear-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 disabled:from-gray-900 disabled:to-gray-900 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 disabled:cursor-not-allowed border border-gray-700"
+                  className="w-full py-3 px-4 disabled:from-gray-900 disabled:to-gray-900 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 disabled:cursor-not-allowed border border-gray-700 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                 >
                   {isLoading ? (
-                    <span className="flex items-center justify-center gap-2">
+                    <span className="flex items-center justify-center gap-2 ">
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                       Adding Intern...
                     </span>
@@ -471,7 +542,7 @@ const Intern = () => {
                         </div>
                         <div className="text-right">
                           <p className="text-gray-400 text-sm">Mentor: {getMentorName(intern.mentor_id)}</p>
-                          <p className="text-gray-500 text-xs">Mentor ID: {intern.mentor_id}</p>
+                          <p className="text-gray-500 text-xs">Mentor Email: {intern.mentor_email}</p>
                           <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
                             intern.status === 'active' 
                               ? 'bg-green-900/30 text-green-400 border border-green-800/50' 
@@ -480,13 +551,22 @@ const Intern = () => {
                             {intern.status}
                           </span>
                         </div>
-                        <button
-                          onClick={() => startEditing(intern)}
-                          className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-all duration-200"
-                          title="Edit Intern"
-                        >
-                          <Edit size={16} className="text-gray-300" />
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => startEditing(intern)}
+                            className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-all duration-200"
+                            title="Edit Intern"
+                          >
+                            <Edit size={16} className="text-gray-300" />
+                          </button>
+                          <button
+                            onClick={() => confirmDelete(intern.id, intern.name)}
+                            className="p-2 bg-red-700 hover:bg-red-600 rounded-lg transition-all duration-200"
+                            title="Delete Intern"
+                          >
+                            <Trash2 size={16} className="text-red-300" />
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -501,7 +581,7 @@ const Intern = () => {
           {/* Mentors List */}
           <div className="bg-black/40 border border-gray-800 rounded-xl p-6 mb-6">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <span><Brain /></span>
+              <span className='text-purple-400'><Brain /></span>
               Available Mentors
             </h3>
             <div className="space-y-3">
@@ -510,7 +590,10 @@ const Intern = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-white font-medium">{mentor.name}</p>
+                      <div className='flex text-white text-sm gap-1'>
+                        <span><Building className='w-3 h-5'/></span>
                       <p className="text-gray-400 text-sm">{mentor.department}</p>
+                      </div>
                     </div>
                     <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">
                       ID: {mentor.id}
