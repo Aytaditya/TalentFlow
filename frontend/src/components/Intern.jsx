@@ -30,14 +30,16 @@ const Intern = () => {
 
     // Mock interns data - replace with actual API call
     const fetchInterns = async () => {
-      // Simulate API call
-      setTimeout(() => {
-        setInterns([
-          { id: 1, name: 'John Doe', email: 'john@example.com', mentor_id: 1, mentorName: 'aditya aryan', status: 'Active' },
-          { id: 2, name: 'Jane Smith', email: 'jane@example.com', mentor_id: 2, mentorName: 'ds priyam', status: 'Active' },
-          { id: 3, name: 'Mike Johnson', email: 'mike@example.com', mentor_id: 1, mentorName: 'aditya aryan', status: 'Inactive' },
-        ])
-      }, 500)
+
+      try {
+        const response=await fetch("http://localhost:8082/api/all-intern")
+        if (!response.ok) throw new Error('Failed to fetch mentors')
+          const data = await response.json()
+          setInterns(data)
+          console.log(data)
+      } catch (error) {
+        setError('Error fetching mentors: ' + err.message)
+      }
     }
 
     fetchMentors()
@@ -67,11 +69,11 @@ const Intern = () => {
     try {
       setIsLoading(true)
       
-      // Prepare data for API - using mentor_id instead of mentor
+      
       const internData = {
         name: formData.name,
         email: formData.email,
-        mentor_id: parseInt(formData.mentor_id) // Ensure it's a number
+        mentor_id: parseInt(formData.mentor_id) 
       }
 
       console.log('Sending data to API:', internData)
@@ -90,8 +92,8 @@ const Intern = () => {
           name: formData.name,
           email: formData.email,
           mentor_id: selectedMentor.id,
-          mentorName: selectedMentor.name,
-          status: 'Active'
+          mentor_name: selectedMentor.name,
+          status: 'active'
         }
         
         setInterns(prev => [newIntern, ...prev])
@@ -303,7 +305,7 @@ const Intern = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-gray-400 text-sm">Mentor: {intern.mentorName}</p>
+                      <p className="text-gray-400 text-sm">Mentor: {intern.mentor_name}</p>
                       <p className="text-gray-500 text-xs">Mentor ID: {intern.mentor_id}</p>
                       <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
                         intern.status === 'Active' 

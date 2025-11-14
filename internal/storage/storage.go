@@ -226,3 +226,28 @@ func (sq *Sqlite) GetMentors() ([]types.ReturnMentor, error) {
 
 	return mentors, nil
 }
+
+func (sq *Sqlite) GetInterns() ([]types.ReturnIntern, error) {
+	rows, err := sq.DB.Query("SELECT a.id,a.name,a.email,a.status,a.mentor_id,b.name,b.email from Interns as a INNER JOIN Mentors as b on a.mentor_id=b.id ")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var interns []types.ReturnIntern
+	for rows.Next() {
+		var intern types.ReturnIntern
+		err1 := rows.Scan(&intern.ID,
+			&intern.Name,
+			&intern.Email,
+			&intern.Status,
+			&intern.MentorId,
+			&intern.MentorName,
+			&intern.MentorEmail)
+		if err1 != nil {
+			return nil, err1
+		}
+
+		interns = append(interns, intern)
+	}
+	return interns, nil
+}

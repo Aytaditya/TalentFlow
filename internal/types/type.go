@@ -36,3 +36,13 @@ type ReturnMentor struct {
 	Name       string `json:"name"`
 	Department string `json:"department"`
 }
+
+type ReturnIntern struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	Status      string `json:"status"`
+	MentorId    string `json:"mentor_id"`
+	MentorName  string `json:"mentor_name"`
+	MentorEmail string `json:"mentor_email"`
+}

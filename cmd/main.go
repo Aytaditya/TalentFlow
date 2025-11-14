@@ -45,6 +45,7 @@ func main() {
 	router.HandleFunc("POST /api/signup", auth.Signup(storage))
 	router.HandleFunc("POST /api/login", auth.Login(storage))
 	router.HandleFunc("POST /api/add-mentor", mentor.AddMentor(storage))
+	router.HandleFunc("GET /api/all-intern", Interns.FetchInterns(storage))
 	router.HandleFunc("GET /api/all-mentor", mentor.FetchMentors(storage))
 	router.HandleFunc("POST /api/add-intern", Interns.AddIntern(storage))
 

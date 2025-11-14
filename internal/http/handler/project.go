@@ -35,3 +35,14 @@ func AddIntern(storage *storage.Sqlite) http.HandlerFunc {
 
 	}
 }
+
+func FetchInterns(storage *storage.Sqlite) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		interns, err := storage.GetInterns()
+		if err != nil {
+			response.WriteResponse(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		response.WriteResponse(w, http.StatusOK, interns)
+	}
+}
