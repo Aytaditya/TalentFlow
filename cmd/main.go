@@ -7,6 +7,8 @@ import (
 
 	"github.com/Aytaditya/slotwise/internal/config"
 	"github.com/Aytaditya/slotwise/internal/http/auth"
+	Interns "github.com/Aytaditya/slotwise/internal/http/handler"
+	"github.com/Aytaditya/slotwise/internal/http/handler/mentor"
 	"github.com/Aytaditya/slotwise/internal/storage"
 )
 
@@ -42,6 +44,9 @@ func main() {
 
 	router.HandleFunc("POST /api/signup", auth.Signup(storage))
 	router.HandleFunc("POST /api/login", auth.Login(storage))
+	router.HandleFunc("POST /api/add-mentor", mentor.AddMentor(storage))
+	router.HandleFunc("GET /api/all-mentor", mentor.FetchMentors(storage))
+	router.HandleFunc("POST /api/add-intern", Interns.AddIntern(storage))
 
 	server := http.Server{
 		Handler: corsMiddleware(router), // CORS enabled here

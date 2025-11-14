@@ -6,6 +6,7 @@ import (
 
 	"github.com/Aytaditya/slotwise/internal/config"
 	"github.com/Aytaditya/slotwise/internal/middleware/jwt"
+	"github.com/Aytaditya/slotwise/internal/types"
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -153,4 +154,75 @@ func (sq *Sqlite) Login(email *string, password *string) (int64, string, error) 
 		return 0, "", err1
 	}
 	return id, token, nil
+}
+
+func (sq *Sqlite) AddIntern(name *string, email *string, mentorId *int64) (int64, error) {
+
+	if name == nil || email == nil || mentorId == nil {
+		return 0, fmt.Errorf("field empty")
+	}
+
+	stmt, err := sq.DB.Prepare("INSERT INTO Interns (name,email,mentor_id) VALUES (?,?,?)")
+	if err != nil {
+		return 0, err
+	}
+
+	res, err1 := stmt.Exec(name, email, mentorId)
+	if err1 != nil {
+		return 0, err1
+	}
+
+	stmt.Close()
+
+	id, err2 := res.LastInsertId()
+	if err2 != nil {
+		return 0, err2
+	}
+
+	return id, nil
+}
+
+func (sq *Sqlite) AddMentor(name *string, email *string, department *string) (int64, error) {
+	if name == nil || email == nil || department == nil {
+		return 0, fmt.Errorf("field missing")
+	}
+
+	stmt, err := sq.DB.Prepare("INSERT INTO Mentors (name,email,department) VALUES (?,?,?)")
+	if err != nil {
+		return 0, err
+	}
+
+	res, err1 := stmt.Exec(name, email, department)
+	if err1 != nil {
+		return 0, err1
+	}
+
+	stmt.Close()
+
+	id, err2 := res.LastInsertId()
+	if err2 != nil {
+		return 0, err2
+	}
+
+	return id, nil
+}
+
+func (sq *Sqlite) GetMentors() ([]types.ReturnMentor, error) {
+	rows, err := sq.DB.Query("SELECT id, name,department FROM Mentors")
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	var mentors []types.ReturnMentor
+	for rows.Next() {
+		var mentor types.ReturnMentor // a single mentor will be appended into mentors
+		err1 := rows.Scan(&mentor.Id, &mentor.Name, &mentor.Department)
+		if err1 != nil {
+			return nil, err1
+		}
+		mentors = append(mentors, mentor)
+	}
+
+	return mentors, nil
 }

@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useAuth } from "../context/AuthContext";
 import { Activity, ChartBar, Baby, Users, FolderClosed, LogOut,User } from "lucide-react"
 import Data from "../components/Data";
+import Intern from "../components/Intern";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -159,8 +160,8 @@ export default function Dashboard() {
 
         {/* Add Forms */}
         {activeTab === "addIntern" && (
-          <div className="p-6 text-white">
-            this is intern page
+          <div className="">
+            <Intern/>
           </div>
         
         )}
