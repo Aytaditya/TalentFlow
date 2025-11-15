@@ -321,3 +321,77 @@ func (sq *Sqlite) DeleteMentor(id *int64) error {
 	stmt.Close()
 	return nil
 }
+
+func (sq *Sqlite) AddProject(name *string, description *string, startDate *string, endDate *string) (int64, error) {
+	if name == nil || description == nil || startDate == nil || endDate == nil {
+		return 0, fmt.Errorf("field missing")
+	}
+	stmt, err := sq.DB.Prepare("INSERT INTO Projects (name,description,start_date,end_date) VALUES (?,?,?,?)")
+	if err != nil {
+		return 0, err
+	}
+	res, err1 := stmt.Exec(name, description, startDate, endDate)
+	if err1 != nil {
+		return 0, err1
+	}
+	defer stmt.Close()
+
+	id, err2 := res.LastInsertId()
+	if err2 != nil {
+		return 0, err2
+	}
+
+	return id, nil
+}
+
+func (sq *Sqlite) GetProjects() ([]types.ReturnProject, error) {
+	rows, err := sq.DB.Query("SELECT id,name,description,status,start_date,end_date FROM Projects")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var projects []types.ReturnProject
+	for rows.Next() {
+		var proj types.ReturnProject
+		err1 := rows.Scan(&proj.Id, &proj.Name, &proj.Description, &proj.Status, &proj.StartDate, &proj.EndDate)
+		if err1 != nil {
+			return nil, err1
+		}
+		projects = append(projects, proj)
+	}
+	return projects, nil
+}
+
+func (sq *Sqlite) UpdateProject(id *int64, name *string, description *string, status *string, startDate *string, endDate *string) error {
+	if id == nil {
+		return fmt.Errorf("id is required")
+	}
+	if name == nil {
+		return fmt.Errorf("field missing")
+	}
+	stmt, err := sq.DB.Prepare("UPDATE Projects SET name=?, description=?, status=?, start_date=?, end_date=? WHERE id=?")
+	if err != nil {
+		return err
+	}
+	_, err1 := stmt.Exec(name, description, status, startDate, endDate, id)
+	if err1 != nil {
+		return err1
+	}
+	defer stmt.Close()
+	return nil
+}
+
+func (sq *Sqlite) DeleteProject(id *int64) error {
+	if id == nil {
+		return fmt.Errorf("id is required")
+	}
+	stmt, err := sq.DB.Prepare("DELETE FROM Projects WHERE id=?")
+	if err != nil {
+		return err
+	}
+	_, err1 := stmt.Exec(id)
+	if err1 != nil {
+		return err1
+	}
+	return nil
+}

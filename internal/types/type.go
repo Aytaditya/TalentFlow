@@ -54,3 +54,27 @@ type UpdateIntern struct {
 	MentorId int64  `json:"mentor_id"`
 	Status   string `json:"status"`
 }
+
+type Project struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	StartDate   string `json:"start_date"`
+	EndDate     string `json:"end_date"`
+}
+
+type ReturnProject struct {
+	Id          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	StartDate   string `json:"start_date"`
+	EndDate     string `json:"end_date"`
+}
+
+type UpdateProject struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	StartDate   string `json:"start_date"`
+	EndDate     string `json:"end_date"`
+}
