@@ -94,3 +94,10 @@ type ReturnAssignment struct {
 	Progress    int64  `json:"progress"`
 	Remarks     string `json:"remarks"`
 }
+
+type UpdateAssignment struct {
+	InternId  int64  `json:"intern_id"`
+	ProjectId int64  `json:"project_id"`
+	Progress  int64  `json:"progress"`
+	Remarks   string `json:"remarks"`
+}

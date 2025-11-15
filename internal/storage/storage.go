@@ -432,3 +432,34 @@ func (sq *Sqlite) GetAssignmets() ([]types.ReturnAssignment, error) {
 	}
 	return assignments, nil
 }
+
+func (sq *Sqlite) UpdateAssignment(internId *int64, projectId *int64, progress *int64, remarks *string) error {
+	if internId == nil || projectId == nil {
+		return fmt.Errorf("missing field")
+	}
+	stmt, err := sq.DB.Prepare("UPDATE Assignments SET progress=?, remarks=? WHERE intern_id=? AND project_id=?")
+	if err != nil {
+		return err
+	}
+	_, err1 := stmt.Exec(progress, remarks, internId, projectId)
+	if err1 != nil {
+		return err1
+	}
+	defer stmt.Close()
+	return nil
+}
+
+func (sq *Sqlite) DeleteAssignment(id *int64) error {
+	if id == nil {
+		return fmt.Errorf("id is required")
+	}
+	stmt, err := sq.DB.Prepare("DELETE FROM Assignments WHERE id=?")
+	if err != nil {
+		return err
+	}
+	_, err1 := stmt.Exec(id)
+	if err1 != nil {
+		return err1
+	}
+	return nil
+}
