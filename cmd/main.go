@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Aytaditya/slotwise/internal/config"
+	"github.com/Aytaditya/slotwise/internal/http/assignment"
 	"github.com/Aytaditya/slotwise/internal/http/auth"
 	Interns "github.com/Aytaditya/slotwise/internal/http/handler"
 	"github.com/Aytaditya/slotwise/internal/http/handler/mentor"
@@ -49,6 +50,7 @@ func main() {
 	router.HandleFunc("GET /api/all-intern", Interns.FetchInterns(storage))
 	router.HandleFunc("GET /api/all-mentor", mentor.FetchMentors(storage))
 	router.HandleFunc("GET /api/all-project", project.AllProjects(storage))
+	router.HandleFunc("GET /api/all-assignment", assignment.AllAssignments(storage))
 	router.HandleFunc("PUT /api/update-intern/{internId}", Interns.UpdateIntern(storage))
 	router.HandleFunc("PUT /api/update-mentor/{mentorId}", mentor.UpdateMentor(storage))
 	router.HandleFunc("PUT /api/update-project/{projectId}", project.UpdateProject(storage))
@@ -57,6 +59,7 @@ func main() {
 	router.HandleFunc("DELETE /api/delete-project/{projectId}", project.DeleteProject(storage))
 	router.HandleFunc("POST /api/add-intern", Interns.AddIntern(storage))
 	router.HandleFunc("POST /api/add-project", project.AddProject(storage))
+	router.HandleFunc("POST /api/add-assignment", assignment.AddAssignment(storage))
 
 	server := http.Server{
 		Handler: corsMiddleware(router), // CORS enabled here

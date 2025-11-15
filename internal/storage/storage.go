@@ -395,3 +395,40 @@ func (sq *Sqlite) DeleteProject(id *int64) error {
 	}
 	return nil
 }
+
+func (sq *Sqlite) AddAssignment(internId *int64, projectId *int64, remarks *string) (int64, error) {
+	if internId == nil || projectId == nil || remarks == nil {
+		return 0, fmt.Errorf("missing field")
+	}
+	stmt, err := sq.DB.Prepare("INSERT INTO Assignments (intern_id,project_id,remarks) VALUES (?,?,?)")
+	if err != nil {
+		return 0, err
+	}
+	res, err1 := stmt.Exec(internId, projectId, remarks)
+	if err1 != nil {
+		return 0, err1
+	}
+	defer stmt.Close()
+	id, err2 := res.LastInsertId()
+	if err2 != nil {
+		return 0, err2
+	}
+	return id, nil
+}
+
+func (sq *Sqlite) GetAssignmets() ([]types.ReturnAssignment, error) {
+	row, err := sq.DB.Query("SELECT a.id,a.intern_id,a.project_id,a.progress,a.remarks,b.name,c.name from Assignments as a INNER JOIN Interns as b on a.intern_id=b.id INNER JOIN Projects as c on a.project_id=c.id")
+	if err != nil {
+		return nil, err
+	}
+	var assignments []types.ReturnAssignment
+	for row.Next() {
+		var assign types.ReturnAssignment
+		err1 := row.Scan(&assign.Id, &assign.InternId, &assign.ProjectId, &assign.Progress, &assign.Remarks, &assign.InternName, &assign.ProjectName)
+		if err1 != nil {
+			return nil, err1
+		}
+		assignments = append(assignments, assign)
+	}
+	return assignments, nil
+}

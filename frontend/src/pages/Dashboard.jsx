@@ -1,10 +1,11 @@
 import { useState } from "react"
 import { useAuth } from "../context/AuthContext";
-import { Activity, ChartBar, Baby, Users, FolderClosed, LogOut,User } from "lucide-react"
+import { Activity, ChartBar, Baby, Users, FolderClosed, LogOut, User, CalendarCheck2 } from "lucide-react"
 import Data from "../components/Data";
 import Intern from "../components/Intern";
 import Mentor from "../components/Mentor";
 import Project from "../components/Project";
+import Assignment from "../components/Assignment";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -70,16 +71,14 @@ export default function Dashboard() {
             { id: "addIntern", label: "Manage Intern", icon: <Baby /> },
             { id: "addMentor", label: "Add Mentor", icon: <Users /> },
             { id: "addProject", label: "Add Project", icon: <FolderClosed /> },
-            // { id: "interns", label: "Interns", icon: "👥" },
-            // { id: "mentors", label: "Mentors", icon: "🎯" },
-            // { id: "projects", label: "Projects", icon: "📋" }
+            { id: "addAssignment", label: "Assign a Task", icon: <CalendarCheck2 /> },
           ].map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${activeTab === item.id
-                  ? 'bg-gray-800 text-white shadow-lg transform scale-105'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                ? 'bg-gray-800 text-white shadow-lg transform scale-105'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
                 }`}
             >
               <span className="text-lg">{item.icon}</span>
@@ -149,23 +148,31 @@ export default function Dashboard() {
 
         {activeTab === "addProject" && (
           <div>
-           <Project/>
+            <Project />
           </div>
         )}
 
         {/* Add Forms */}
         {activeTab === "addIntern" && (
           <div className="">
-            <Intern/>
+            <Intern />
           </div>
         )}
 
-        {activeTab==="addMentor" &&(
+        {activeTab === "addMentor" && (
           <div>
-            <Mentor/>
+            <Mentor />
+          </div>
+        )}
+
+        {activeTab === "addAssignment" && (
+          <div>
+            <Assignment/>
           </div>
         )}
       </div>
+
+
 
       {/* Animation Styles */}
       <style jsx>{`

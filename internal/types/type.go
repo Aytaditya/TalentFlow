@@ -78,3 +78,19 @@ type UpdateProject struct {
 	StartDate   string `json:"start_date"`
 	EndDate     string `json:"end_date"`
 }
+
+type Assignment struct {
+	InternId  int64  `json:"intern_id"`
+	ProjectId int64  `json:"project_id"`
+	Remarks   string `json:"remarks"`
+}
+
+type ReturnAssignment struct {
+	Id          int64  `json:"id"`
+	InternId    int64  `json:"intern_id"`
+	InternName  string `json:"intern_name"`
+	ProjectId   int64  `json:"project_id"`
+	ProjectName string `json:"project_name"`
+	Progress    int64  `json:"progress"`
+	Remarks     string `json:"remarks"`
+}
