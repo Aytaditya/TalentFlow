@@ -316,7 +316,7 @@ const Intern = () => {
           {activeTab === 'add' && (
             <div className="bg-black/40 border border-gray-800 rounded-xl p-6">
               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <span className='text-blue-400'><Laptop /></span>
+                <span className='text-green-400'><Laptop /></span>
                 Add New Intern
               </h2>
               
@@ -405,7 +405,7 @@ const Intern = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 px-4 disabled:from-gray-900 disabled:to-gray-900 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 disabled:cursor-not-allowed border border-gray-700 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                  className="w-full py-3 px-4 disabled:from-gray-900 disabled:to-gray-900 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 disabled:cursor-not-allowed border border-gray-700 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-blue-green"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2 ">

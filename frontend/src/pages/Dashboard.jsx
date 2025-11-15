@@ -4,6 +4,7 @@ import { Activity, ChartBar, Baby, Users, FolderClosed, LogOut,User } from "luci
 import Data from "../components/Data";
 import Intern from "../components/Intern";
 import Mentor from "../components/Mentor";
+import Project from "../components/Project";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -148,14 +149,7 @@ export default function Dashboard() {
 
         {activeTab === "addProject" && (
           <div>
-            <label className="block text-sm font-semibold text-gray-200 mb-3">
-              Description
-            </label>
-            <textarea
-              placeholder="Enter project description"
-              rows="4"
-              className="w-full px-4 py-3 bg-gray-900/70 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-300"
-            />
+           <Project/>
           </div>
         )}
 
