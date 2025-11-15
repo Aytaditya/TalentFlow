@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Baby, Users, FolderClosed, Clock, CheckCircle, AlertTriangle } from "lucide-react"
+import { Baby, Users, FolderClosed, Clock, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react"
 import axios from 'axios'
 
 const Data = () => {
@@ -16,6 +16,7 @@ const Data = () => {
   const [recentActivity, setRecentActivity] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [lastUpdated, setLastUpdated] = useState(null)
 
   // Fetch all data from APIs
   const fetchDashboardData = async () => {
@@ -57,6 +58,9 @@ const Data = () => {
 
       // Generate recent activity from assignments and recent changes
       generateRecentActivity(assignments, interns, projects, mentors)
+      
+      // Update last refreshed time
+      setLastUpdated(new Date())
 
     } catch (err) {
       console.error('Error fetching dashboard data:', err)
@@ -96,23 +100,55 @@ const Data = () => {
       })
     })
 
-    // Add new intern registrations
-    interns.slice(0, 2).forEach(intern => {
+    // Add new intern registrations (show latest interns)
+    interns.slice(-3).forEach(intern => {
       activities.push({
         user: intern.name,
         action: 'joined as intern',
         department: 'New Registration',
-        time: 'recently',
+        time: 'just now',
         type: 'intern'
       })
     })
 
-    // Sort by recent (simulated - in real app you'd have timestamps)
+    // Add new mentor registrations
+    mentors.slice(-2).forEach(mentor => {
+      activities.push({
+        user: mentor.name,
+        action: 'joined as mentor',
+        department: mentor.department,
+        time: 'recently',
+        type: 'mentor'
+      })
+    })
+
+    // Sort by recent (reverse chronological order)
     setRecentActivity(activities.slice(0, 6))
   }
 
+  // Refresh data every 30 seconds
   useEffect(() => {
     fetchDashboardData()
+
+    const interval = setInterval(() => {
+      fetchDashboardData()
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  }, [])
+
+  // Refresh when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchDashboardData()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   const StatCard = ({ title, value, icon, color, delay }) => (
@@ -159,9 +195,19 @@ const Data = () => {
         return <FolderClosed className="text-blue-400" size={16} />
       case 'intern':
         return <Users className="text-purple-400" size={16} />
+      case 'mentor':
+        return <Baby className="text-cyan-400" size={16} />
       default:
         return <Clock className="text-gray-400" size={16} />
     }
+  }
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
   }
 
   if (error) {
@@ -206,6 +252,26 @@ const Data = () => {
       {/* Stats Grid */}
       {!isLoading && (
         <>
+          {/* Header with refresh info */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-white">Dashboard Overview</h1>
+              {lastUpdated && (
+                <p className="text-gray-400 text-sm">
+                  Last updated: {formatTime(lastUpdated)}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={fetchDashboardData}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white rounded-lg transition-all duration-200"
+            >
+              <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+              {isLoading ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard
               title="Total Mentors"
@@ -317,12 +383,9 @@ const Data = () => {
           <div className="bg-black/60 backdrop-blur-md border border-gray-800 rounded-2xl p-6 shadow-2xl animate-slide-up">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Recent Activity</h3>
-              <button
-                onClick={fetchDashboardData}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-all duration-200"
-              >
-                Refresh
-              </button>
+              <span className="text-gray-400 text-sm">
+                Auto-refreshes every 30 seconds
+              </span>
             </div>
             <div className="space-y-3">
               {recentActivity.length > 0 ? (
@@ -353,7 +416,7 @@ const Data = () => {
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Summary */}
           <div className="bg-black/60 backdrop-blur-md border border-gray-800 rounded-2xl p-6 shadow-2xl animate-slide-up">
             <h3 className="text-lg font-semibold text-white mb-4">Quick Summary</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
